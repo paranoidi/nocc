@@ -39,6 +39,8 @@ classifiers = [
 # ---- Main dependencies ----
 
 dependencies = [
+    "colorama>=0.4.6",
+    "pysrt>=1.1.2",
 ]
 
 
