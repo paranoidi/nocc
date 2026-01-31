@@ -1,0 +1,9 @@
+# Changes here will be overwritten by Copier. Do not edit manually.
+_commit: v0.2.21
+_src_path: gh:jlevy/simple-modern-uv
+package_author_email: marko.koivusalo@gmail.com
+package_author_name: paranoidi
+package_description: Remove closed captioning from subtitles
+package_github_org: paranoidi
+package_module: nocc
+package_name: nocc
