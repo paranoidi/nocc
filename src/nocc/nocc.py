@@ -1,10 +1,14 @@
+import argparse
 import copy
 import re
 import sys
+from pathlib import Path
 
 import colorama
 from colorama import Fore
 import pysrt
+
+from nocc.mkvextract import process_mkv
 
 
 REMOVE_RE = [
@@ -160,11 +164,31 @@ def join_short(text):
 def main():
     colorama.init(autoreset=True)
 
-    if len(sys.argv) == 1:
-        print('Use: nocc [filename.srt]')
-        sys.exit(0)
-    for fn in sys.argv[1:]:
-        nocc(fn)
+    parser = argparse.ArgumentParser(
+        description='Remove closed captioning from subtitles',
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        '--lang',
+        type=str,
+        help='Language code (IETF BCP 47) to filter MKV subtitle tracks (e.g., --lang en)'
+    )
+    parser.add_argument(
+        'files',
+        nargs='+',
+        help='Subtitle files (.srt) or MKV files (.mkv) to process'
+    )
+
+    args = parser.parse_args()
+
+    for fn in args.files:
+        fn_path = Path(fn)
+        if fn_path.suffix.lower() == '.mkv':
+            process_mkv(fn, nocc, language_filter=args.lang)
+        else:
+            if args.lang:
+                print(Fore.YELLOW + f'Warning: --lang argument is only used for MKV files. Ignoring for {fn}')
+            nocc(fn)
 
 if __name__ == '__main__':
     main()

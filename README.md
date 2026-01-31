@@ -1,22 +1,43 @@
 # nocc
 
-👉\[\[\[**This is the initial readme for your
-[simple-modern-uv](https://github.com/jlevy/simple-modern-uv) template.** Fill it in and
-delete this message!
-Below are general setup instructions that you may remove or keep and adapt for your
-project.\]\]\]
+Remove closed captioning artifacts from subtitle files.
 
-* * *
+## What it does
 
-## Project Docs
+Cleans SRT subtitle files by removing:
+- Speaker names (e.g., "SOMEONE: says")
+- Sound effects in parentheses/brackets (e.g., "(LOUDLY)", "[LOUDLY]")
+- Font styling tags
+- Songs (♪ character)
+- Empty dashes
+- Fixes missing spaces after punctuation
 
-For how to install uv and Python, see [installation.md](docs/installation.md).
+## Installation
 
-For development workflows, see [development.md](docs/development.md).
+```bash
+pip install nocc
+```
 
-For instructions on publishing to PyPI, see [publishing.md](docs/publishing.md).
+## Usage
 
-* * *
+Process SRT files:
+```bash
+nocc subtitle.srt
+```
 
-*This project was built from
-[simple-modern-uv](https://github.com/jlevy/simple-modern-uv).*
+Process multiple files:
+```bash
+nocc file1.srt file2.srt
+```
+
+Extract and process subtitles from MKV files:
+```bash
+nocc movie.mkv
+```
+
+Filter by language when processing MKV files:
+```bash
+nocc --lang en movie.mkv
+```
+
+Output files are saved with `_nocc` suffix (e.g., `subtitle_nocc.srt`).
