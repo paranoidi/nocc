@@ -14,8 +14,18 @@ Cleans SRT subtitle files by removing:
 
 ## Installation
 
+Currently this not available through PyPI. Use git clone and then:
+
 ```bash
-pip install nocc
+uv sync
+```
+
+After that command is available from `.venv/bin/nocc`
+
+To make it available everywhere you can create a symlink to `~/.local/bin/nocc`.
+
+```bash
+ln -s .venv/bin/nocc ~/.local/bin/nocc
 ```
 
 ## Usage
