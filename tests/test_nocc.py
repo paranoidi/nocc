@@ -6,7 +6,29 @@ from pathlib import Path
 
 import pysrt
 
-from nocc.nocc import nocc
+from nocc.nocc import process_subtitle_file
+
+
+class SilentOutputHandler:
+    """Silent output handler for tests that suppresses all output."""
+
+    def info(self, message: str) -> None:
+        pass
+
+    def warning(self, message: str) -> None:
+        pass
+
+    def error(self, message: str) -> None:
+        pass
+
+    def success(self, message: str) -> None:
+        pass
+
+    def show_cleaning(self, original: str, cleaned: str, rules: list) -> None:
+        pass
+
+    def show_deleted(self, text: str) -> None:
+        pass
 
 
 def get_test_file_path(filename: str) -> Path:
@@ -42,14 +64,9 @@ def run_nocc_test(test_filename: str):
         test_copy = Path(tmpdir) / test_filename
         shutil.copy(test_file, test_copy)
 
-        # Suppress print output during test
-        old_stdout = sys.stdout
-        sys.stdout = StringIO()
-
-        try:
-            nocc(str(test_copy))
-        finally:
-            sys.stdout = old_stdout
+        # Use silent output handler for tests
+        silent_handler = SilentOutputHandler()
+        process_subtitle_file(str(test_copy), silent_handler)
 
         output_file = test_copy.parent / test_filename.replace('.srt', '_nocc.srt')
         expected_content = read_srt_file(expected_file)
@@ -106,13 +123,9 @@ def test_twodashes():
         test_copy = Path(tmpdir) / "twodashes.srt"
         shutil.copy(test_file, test_copy)
 
-        old_stdout = sys.stdout
-        sys.stdout = StringIO()
-
-        try:
-            nocc(str(test_copy))
-        finally:
-            sys.stdout = old_stdout
+        # Use silent output handler for tests
+        silent_handler = SilentOutputHandler()
+        process_subtitle_file(str(test_copy), silent_handler)
 
         # twodashes.srt should not generate output file (already clean)
         output_file = test_copy.parent / "twodashes_nocc.srt"

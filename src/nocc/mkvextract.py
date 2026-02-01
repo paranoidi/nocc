@@ -148,13 +148,12 @@ def extract_srt_track(mkv_file, track_id, output_file):
         return False
 
 
-def process_mkv(mkv_file, nocc_func, language_filter=None):
+def process_mkv(mkv_file, language_filter=None):
     """
     Process an MKV file by extracting and processing SRT subtitle tracks.
     
     Args:
         mkv_file: Path to the MKV file
-        nocc_func: Function to process SRT files (the nocc() function)
         language_filter: Optional language code (IETF BCP 47) to filter tracks by (e.g., 'en')
     """
     if not check_mkvextract():
@@ -198,6 +197,9 @@ def process_mkv(mkv_file, nocc_func, language_filter=None):
 
     print(Fore.CYAN + f'Found {len(tracks)} SRT subtitle track(s)')
 
+    # Import here to avoid circular import
+    from nocc.nocc import process_subtitle_file
+
     # Create a temporary directory for extracted tracks
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_path = Path(tmpdir)
@@ -212,22 +214,19 @@ def process_mkv(mkv_file, nocc_func, language_filter=None):
             if not extract_srt_track(mkv_file, track_id, str(temp_srt)):
                 continue
 
-            # Process the extracted SRT file
-            nocc_func(str(temp_srt))
-
-            # Move processed file to final location
             # Sanitize track name for filename
             safe_track_name = re.sub(r'[^\w\s-]', '', track_name).strip().replace(' ', '_')
             if not safe_track_name:
                 safe_track_name = f'track{track_id}'
             
+            # Construct final output path
             output_name = f'{base_name}_track{track_id}_{safe_track_name}_nocc.srt'
             output_path = mkv_path.parent / output_name
+
+            # Process the extracted SRT file with explicit output path
+            was_modified = process_subtitle_file(str(temp_srt), output_path=str(output_path))
             
-            # Check if nocc created a processed file
-            processed_file = temp_srt.parent / f'{temp_srt.stem}_nocc.srt'
-            if processed_file.exists():
-                shutil.move(str(processed_file), str(output_path))
+            if was_modified:
                 print(Fore.GREEN + f'Saved processed track to: {output_path}')
             elif temp_srt.exists():
                 # File was already clean, but we still want to save it
