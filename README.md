@@ -50,4 +50,6 @@ Filter by language when processing MKV files:
 nocc --lang en movie.mkv
 ```
 
-Output files are saved with `_nocc` suffix (e.g., `subtitle_nocc.srt`).
+When processing SRT files directly, the original file is renamed with a leading underscore
+and the cleaned subtitles are written back to the original filename (e.g., `subtitle.srt`
+becomes `_subtitle.srt` + a cleaned `subtitle.srt`).

@@ -219,8 +219,8 @@ def process_mkv(mkv_file, language_filter=None):
             if not safe_track_name:
                 safe_track_name = f'track{track_id}'
             
-            # Construct final output path
-            output_name = f'{base_name}_track{track_id}_{safe_track_name}_nocc.srt'
+            # Construct final output path (filenames are always the cleaned subtitles)
+            output_name = f'{base_name}_track{track_id}_{safe_track_name}.srt'
             output_path = mkv_path.parent / output_name
 
             # Process the extracted SRT file with explicit output path
@@ -229,7 +229,7 @@ def process_mkv(mkv_file, language_filter=None):
             if was_modified:
                 print(Fore.GREEN + f'Saved processed track to: {output_path}')
             elif temp_srt.exists():
-                # File was already clean, but we still want to save it
-                output_path_clean = mkv_path.parent / f'{base_name}_track{track_id}_{safe_track_name}.srt'
-                shutil.copy(str(temp_srt), str(output_path_clean))
-                print(Fore.GREEN + f'Saved clean track to: {output_path_clean}')
+                # File was already clean, but we still want to save it under the same
+                # cleaned filename convention.
+                shutil.copy(str(temp_srt), str(output_path))
+                print(Fore.GREEN + f'Saved clean track to: {output_path}')

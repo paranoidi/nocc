@@ -250,8 +250,11 @@ def process_subtitle_file(
     Args:
         filename: Path to the SRT file to process
         output_handler: Optional output handler for messages (defaults to ConsoleOutputHandler)
-        output_path: Optional path for the output file. If None, uses default naming convention
-                     ({input}_nocc.srt). If provided, uses this exact path.
+        output_path: Optional path for the output file. If None, the original file is
+                     renamed to have a leading underscore (e.g., subtitle.srt ->
+                     _subtitle.srt) and the cleaned subtitles are written back to the
+                     original filename. If provided, uses this exact path without
+                     renaming the source file.
 
     Returns:
         True if the file was modified, False otherwise
@@ -260,11 +263,6 @@ def process_subtitle_file(
         FileNotFoundError: If the file doesn't exist
         pysrt.Error: If the file cannot be parsed
     """
-    if 'nocc' in filename:
-        handler = output_handler or ConsoleOutputHandler()
-        handler.error(f'Ignored already processed file: {filename}')
-        return False
-
     handler = output_handler or ConsoleOutputHandler()
     cleaner = SubtitleCleaner()
 
@@ -295,19 +293,35 @@ def process_subtitle_file(
     for index in reversed(delete_indices):
         del subs[index]
 
-    if modified:
-        # Use provided output_path or default naming convention
-        if output_path is not None:
+    if output_path is not None:
+        if modified:
             output_filename = output_path
+            try:
+                subs.save(output_filename, encoding='utf-8')
+            except Exception as e:
+                handler.error(f'Failed to save processed file {output_filename}: {e}')
+                raise
         else:
-            output_filename = filename.replace('.srt', '_nocc.srt')
-        try:
-            subs.save(output_filename, encoding='utf-8')
-        except Exception as e:
-            handler.error(f'Failed to save processed file {output_filename}: {e}')
-            raise
+            handler.success(f'Already clean file: {filename}')
     else:
-        handler.success(f'Already clean file: {filename}')
+        original_path = Path(filename)
+        backup_path = original_path.with_name(f'_{original_path.name}')
+        try:
+            original_path.rename(backup_path)
+        except Exception as e:
+            handler.error(f'Failed to backup original file {filename} to {backup_path}: {e}')
+            raise
+
+        try:
+            subs.save(str(original_path), encoding='utf-8')
+        except Exception as e:
+            handler.error(f'Failed to save processed file {original_path}: {e}')
+            raise
+
+        if modified:
+            handler.success(f'Cleaned file: {filename}')
+        else:
+            handler.success(f'Already clean file: {filename}')
 
     return modified
 

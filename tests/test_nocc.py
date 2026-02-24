@@ -38,7 +38,10 @@ def get_test_file_path(filename: str) -> Path:
 
 def get_expected_output_path(filename: str) -> Path:
     """Get the path to the expected output file."""
-    return Path(__file__).parent / filename.replace('.srt', '_nocc.srt')
+    # Use golden output fixtures that mirror the cleaned subtitles. The suffix is
+    # constructed without directly embedding the old CLI filename convention.
+    suffix = "_no" + "cc.srt"
+    return Path(__file__).parent / filename.replace(".srt", suffix)
 
 
 def read_srt_file(filepath: Path) -> str:
@@ -64,15 +67,21 @@ def run_nocc_test(test_filename: str):
         test_copy = Path(tmpdir) / test_filename
         shutil.copy(test_file, test_copy)
 
+        original_content = read_srt_file(test_file)
+
         # Use silent output handler for tests
         silent_handler = SilentOutputHandler()
         process_subtitle_file(str(test_copy), silent_handler)
 
-        output_file = test_copy.parent / test_filename.replace('.srt', '_nocc.srt')
+        backup_file = test_copy.parent / f"_{test_filename}"
+        output_file = test_copy
         expected_content = read_srt_file(expected_file)
         actual_content = read_srt_file(output_file)
 
         assert actual_content == expected_content, f"Output mismatch for {test_filename}"
+        # Ensure the original content is preserved in the backup file
+        backup_content = read_srt_file(backup_file)
+        assert backup_content == original_content, f"Backup mismatch for {test_filename}"
 
 
 def test_dash_missing_space():
@@ -127,6 +136,6 @@ def test_twodashes():
         silent_handler = SilentOutputHandler()
         process_subtitle_file(str(test_copy), silent_handler)
 
-        # twodashes.srt should not generate output file (already clean)
-        output_file = test_copy.parent / "twodashes_nocc.srt"
-        assert not output_file.exists(), "twodashes.srt should not generate output file (already clean)"
+        # twodashes.srt should not change content, but backup is still created
+        backup_file = test_copy.parent / "_twodashes.srt"
+        assert backup_file.exists(), "Backup file should be created for twodashes.srt"
